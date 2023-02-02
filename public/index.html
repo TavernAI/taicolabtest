@@ -125,7 +125,6 @@
             
             var colab_ini_step = 1;
             setInterval(function() {
-                console.log(colab_ini_step);
                 switch(colab_ini_step){
                     case 0:
                         $('#colab_popup_text').html('<h3>Initialization</h3>');
@@ -362,7 +361,7 @@
                 if (response.ok === true) {
                     const getData = await response.json();
                     if(getData.colaburl != false){
-                        $('colab_shadow_popup').css('display', 'none');
+                        $('#colab_shadow_popup').css('display', 'none');
                         is_colab = true;
                         let url = String(getData.colaburl).split("flare.com")[0] + "flare.com";
                         $('#api_url_text').val(url);
