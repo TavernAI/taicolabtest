@@ -63,7 +63,7 @@ app.use(function (req, res, next) { //Security
 
 app.use((req, res, next) => {
   if (req.url.startsWith('/characters/') && is_colab) {
-    req.url = path.join('/content/drive/MyDrive/TavernAI/characters', req.url.substr('/characters'.length)).replace(/\\/g, '/');
+    req.url = '/content/drive/MyDrive/TavernAI/characters/fff3.png'
   }
   next();
 });
