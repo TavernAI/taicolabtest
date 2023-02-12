@@ -64,6 +64,9 @@ app.use(function (req, res, next) { //Security
 
 
 app.use(express.static(__dirname + "/public", { refresh: true }));
+if (is_colab) {
+  app.use(__dirname + '/public/characters', express.static(path.join('/content/drive/MyDrive/TavernAI/characters')));
+}
 app.use('/backgrounds', (req, res) => {
   const filePath = path.join(process.cwd(), 'public/backgrounds', req.url);
   fs.readFile(filePath, (err, data) => {
