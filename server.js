@@ -45,6 +45,7 @@ var response_getlastversion;
 var api_key_novel;
 
 var is_colab = false;
+var charactersPath = 'public/characters/';
 
 const jsonParser = express.json({limit: '100mb'});
 const urlencodedParser = express.urlencoded({extended: true, limit: '100mb'});
@@ -74,7 +75,7 @@ app.use('/backgrounds', (req, res) => {
   });
 });
 app.use('/characters', (req, res) => {
-  const filePath = path.join(process.cwd(), 'public/characters', req.url);
+  const filePath = path.join(process.cwd(), charactersPath, req.url);
   fs.readFile(filePath, (err, data) => {
     if (err) {
       res.status(404).send('File not found');
@@ -322,8 +323,10 @@ function charaFormatData(data){
     return char;
 }
 app.post("/createcharacter", urlencodedParser, function(request, response){
+    
+    
     if(!request.body) return response.sendStatus(400);
-    if (!fs.existsSync('public/characters/'+request.body.ch_name+'.png')){
+    if (!fs.existsSync(charactersPath+request.body.ch_name+'.png')){
         if(!fs.existsSync('public/chats/'+request.body.ch_name) )fs.mkdirSync('public/chats/'+request.body.ch_name);
         //if(!fs.existsSync('public/characters/'+request.body.ch_name+'/chats')) fs.mkdirSync('public/characters/'+request.body.ch_name+'/chats');
         //if(!fs.existsSync('public/characters/'+request.body.ch_name+'/avatars')) fs.mkdirSync('public/characters/'+request.body.ch_name+'/avatars');
@@ -442,7 +445,7 @@ async function charaWrite(img_url, data, name, response = undefined, mes = 'ok')
         chunks.splice(-1, 0, PNGtext.encode('chara', base64EncodedData));
         //chunks.splice(-1, 0, text.encode('lorem', 'ipsum'));
 
-        fs.writeFileSync('public/characters/'+name+'.png', new Buffer.from(encode(chunks)));
+        fs.writeFileSync(charactersPath+name+'.png', new Buffer.from(encode(chunks)));
         if(response !== undefined) response.send(mes);
             
 
@@ -1048,6 +1051,7 @@ app.listen(server_port, function() {
     if(process.env.colab !== undefined){
         if(process.env.colab == 2){
             is_colab = true;
+            charactersPath = '/content/drive/MyDrive/TavernAI/characters/';
         }
     }
     console.log('Launching...');
