@@ -63,12 +63,24 @@ app.use(function (req, res, next) { //Security
 
 app.use((req, res, next) => {
   if (req.url.startsWith('/characters/') && is_colab) {
-    req.url = '/content/drive/MyDrive/TavernAI/characters/fff3.png'
+      
+    const filePath = path.join('/content/drive/MyDrive/TavernAI/characters', req.url.substr('/characters'.length));
+    fs.access(filePath, fs.constants.R_OK, (err) => {
+      if (!err) {
+        res.sendFile(filePath);
+      } else {
+          res.send('Character not found: '+filePath);
+        //next();
+      }
+    });
+  } else {
+    next();
   }
-  next();
 });
-
 app.use(express.static(__dirname + "/public", { refresh: true }));
+
+
+
 
 app.use('/backgrounds', (req, res) => {
   const filePath = path.join(process.cwd(), 'public/backgrounds', req.url);
