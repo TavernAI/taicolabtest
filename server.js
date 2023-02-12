@@ -44,7 +44,7 @@ var response_getstatus_novel;
 var response_getlastversion;
 var api_key_novel;
 
-var is_colab = false;
+var is_colab = true;
 var charactersPath = 'public/characters/';
 var chatsPath = 'public/chats/';
 
@@ -61,12 +61,15 @@ app.use(function (req, res, next) { //Security
     next();
 });
 
-
+app.use((req, res, next) => {
+  if (req.url.startsWith('/characters/') && is_colab) {
+    req.url = path.join('/content/drive/MyDrive/TavernAI/characters', req.url.substr('/characters'.length)).replace(/\\/g, '/');
+  }
+  next();
+});
 
 app.use(express.static(__dirname + "/public", { refresh: true }));
-if (is_colab) {
-  app.use(__dirname + '/public/characters', express.static(path.join('/content/drive/MyDrive/TavernAI/characters')));
-}
+
 app.use('/backgrounds', (req, res) => {
   const filePath = path.join(process.cwd(), 'public/backgrounds', req.url);
   fs.readFile(filePath, (err, data) => {
