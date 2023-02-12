@@ -47,7 +47,10 @@ var api_key_novel;
 var is_colab = true;
 var charactersPath = 'public/characters/';
 var chatsPath = 'public/chats/';
-
+if (is_colab){
+    charactersPath = '/content/drive/MyDrive/TavernAI/characters/';
+    chatsPath = '/content/drive/MyDrive/TavernAI/chats/';
+}
 const jsonParser = express.json({limit: '100mb'});
 const urlencodedParser = express.urlencoded({extended: true, limit: '100mb'});
 
@@ -64,12 +67,12 @@ app.use(function (req, res, next) { //Security
 app.use((req, res, next) => {
   if (req.url.startsWith('/characters/') && is_colab) {
       
-    const filePath = path.join('/content/drive/MyDrive/TavernAI/characters', req.url.substr('/characters'.length));
+    const filePath = path.join(charactersPath, req.url.substr('/characters'.length));
     fs.access(filePath, fs.constants.R_OK, (err) => {
       if (!err) {
         res.sendFile(filePath);
       } else {
-          res.send('Character not found: '+filePath);
+        res.send('Character not found: '+filePath);
         //next();
       }
     });
@@ -1059,8 +1062,6 @@ app.listen(server_port, function() {
     if(process.env.colab !== undefined){
         if(process.env.colab == 2){
             is_colab = true;
-            charactersPath = '/content/drive/MyDrive/TavernAI/characters/';
-            chatsPath = '/content/drive/MyDrive/TavernAI/chats/';
         }
     }
     console.log('Launching...');
