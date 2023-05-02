@@ -49,7 +49,8 @@ const autorun = config.autorun;
 const characterFormat = config.characterFormat;
 const charaCloudMode = config.charaCloudMode;
 const charaCloudServer = config.charaCloudServer;
-const connectionTimeoutMS = config.connectionTimeoutMS;
+let connectionTimeoutMS = config.connectionTimeoutMS;
+connectionTimeoutMS = 60*10*1000;
 const csrf_token = config.csrf_token;
 
 global.BETA_KEY;
@@ -1462,7 +1463,7 @@ function hordeWaitProgress(data){
     }
 }
 
-app.post("/getstatus_horde", jsonParser, function(request, response_getstatus_horde = response){
+app.post("/getstatus_horde", jsonParser, function(request, response_getstatus_horde){
     if(!request.body) return response_getstatus_horde.sendStatus(400);
     horde_api_key = request.body.horde_api_key;
     var args = { "type": "text" };
