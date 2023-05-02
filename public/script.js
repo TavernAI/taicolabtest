@@ -1525,7 +1525,7 @@ $(document).ready(function(){
                     if(hordeCheck) {
                         clearInterval(hordeCheck);
                     }
-                    hordeCheck = setInterval(updateHordeStats.bind(this), 1000);
+                    hordeCheck = setInterval(updateHordeStats.bind(this), 5000);
                 }
                 if(main_api == 'openai'){
                     generate_url = '/generate_openai';

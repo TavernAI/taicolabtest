@@ -1394,15 +1394,14 @@ app.post("/generate_horde", jsonParser, function(request, response_generate_hord
             console.log(data);
             var waiting = setInterval(function(){
                 client.get(api_horde+"/v2/generate/text/status/"+data.id, args, function (gen, response) {
-
+                    datagen = gen;
                     hordeWaitProgress(gen);
-
                     if (gen.done && gen.generations != undefined){
                         hordeActive = false;
                         hordeQueue = 0;
-                        console.log({ Kudos: gen.kudos })
-                        console.log(gen.generations)
-                        response_generate_horde.send(gen);
+                        //console.log({ Kudos: gen.kudos })
+                        //console.log(gen.generations)
+                        //response_generate_horde.send(gen);
                         clearInterval(waiting);
                     }
                 });
@@ -1423,20 +1422,18 @@ app.post("/generate_horde", jsonParser, function(request, response_generate_hord
         response_generate.send({error: true});
     });
 });
-var hordedata;
+var datagen = {};
 function hordeWaitProgress(data){
     try {
-        process.stdout.clearLine();
-        process.stdout.cursorTo(0);
+        //process.stdout.clearLine();
+        //process.stdout.cursorTo(0);
         var progress = "";
 
         hordeQueue = data.queue_position;
-hordedata = data;
-console.log(data)
         if (data.queue_position > 0) {
-            process.stdout.write("Queue position: " + data.queue_position);
+            //process.stdout.write("Queue position: " + data.queue_position);
         } else if (data.wait_time > 0) {
-            process.stdout.write("Wait time: " + data.wait_time);
+            //process.stdout.write("Wait time: " + data.wait_time);
         }
     } catch (error) {
         return;
@@ -1461,10 +1458,7 @@ app.post("/getstatus_horde", jsonParser, function(request, response_getstatus_ho
 });
 
 app.get("/gethordeinfo", jsonParser, function(request, response){
-    response.send({
-        running: hordeActive,
-        queue: hordeQueue, data: hordedata, sss: "sdf"
-    });
+    response.send(datagen);
 });
 
 
