@@ -1422,7 +1422,7 @@ function pollHordeStatus(id, args, response_generate_horde) {
             hordeQueue = 0;
             console.log({Kudos: gen.kudos});
             console.log(gen.generations);
-            response_generate_horde.send(gen);
+            return response_generate_horde.send(gen);
         }
         setTimeout(() => pollHordeStatus(id, args, response_generate_horde), 3000);
     }).on('error', function (err) {
