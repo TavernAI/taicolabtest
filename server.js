@@ -70,6 +70,7 @@ const api_horde = "https://stablehorde.net/api";
 
 var hordeActive = false;
 var hordeQueue;
+var hordeData = {};
 
 var response_get_story;
 var response_generate;
@@ -1409,13 +1410,13 @@ app.post("/generate_horde", jsonParser, function(request, response_generate_hord
         response_generate_horde.send({error: true});
     });
 });
-var countHord = {};
+
 function pollHordeStatus(id, args, response_generate_horde) {
 
 
     client.get(api_horde + "/v2/generate/text/status/" + id, args, function (gen, response) {
 
-        countHord = gen;
+        hordeData = gen;
         hordeWaitProgress(gen);
 
         if (gen.done && gen.generations != undefined) {
@@ -1477,7 +1478,8 @@ app.post("/getstatus_horde", jsonParser, function(request, response_getstatus_ho
 app.get("/gethordeinfo", jsonParser, function(request, response){
     response.send({
         running: hordeActive,
-        queue: hordeQueue, count: countHord
+        queue: hordeQueue,
+        hordeData: hordeData
     });
 });
 
