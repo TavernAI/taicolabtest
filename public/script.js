@@ -1531,7 +1531,7 @@ $(document).ready(function(){
                 }
                 let timeout = requestTimeout;
                 if(main_api == 'horde'){
-                    timeout = 1*10*1000;
+                    timeout = 1*1000*1000;
                 }
                 jQuery.ajax({    
                     type: 'POST', // 
