@@ -1463,7 +1463,7 @@ app.post("/getstatus_horde", jsonParser, function(request, response_getstatus_ho
 app.get("/gethordeinfo", jsonParser, function(request, response){
     response.send({
         running: hordeActive,
-        queue: hordeQueue, data: hordedata
+        queue: hordeQueue, data: hordedata, sss: "sdf"
     });
 });
 
