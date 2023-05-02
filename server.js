@@ -1961,6 +1961,7 @@ module.exports.extract = extract;
 module.exports.encode = encode;
 module.exports.PNGtext = PNGtext;
 module.exports.ExifReader = ExifReader;
+module.exports.charactersPath = charactersPath;
 
 
 const charaCloudRoute = require('./routes/characloud');
