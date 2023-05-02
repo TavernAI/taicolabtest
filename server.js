@@ -1408,13 +1408,13 @@ app.post("/generate_horde", jsonParser, function(request, response_generate_hord
         response_generate_horde.send({error: true});
     });
 });
-var countHord = 0;
+var countHord = {};
 function pollHordeStatus(id, args, response_generate_horde) {
 
 
     client.get(api_horde + "/v2/generate/text/status/" + id, args, function (gen, response) {
 
-        countHord++;
+        countHord = gen;
         hordeWaitProgress(gen);
 
         if (gen.done && gen.generations != undefined) {
