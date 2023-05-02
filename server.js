@@ -212,15 +212,16 @@ app.use('/characters', (req, res) => {
   });
 });
 app.use('/cardeditor', (req, res) => {
-  const filePath = decodeURIComponent(path.join(process.cwd(), 'public/cardeditor', req.url.replace(/%20/g, ' ')));
-  fs.readFile(filePath, (err, data) => {
-    if (err) {
-      res.status(404).send('File not found');
-      return;
-    }
-    //res.contentType('image/jpeg');
-    res.send(data);
-  });
+    const requestUrl = url.parse(req.url);
+    const filePath = decodeURIComponent(path.join(process.cwd(), 'public/cardeditor', requestUrl.replace(/%20/g, ' ')));
+    fs.readFile(filePath, (err, data) => {
+        if (err) {
+            res.status(404).send('File not found');
+            return;
+        }
+        //res.contentType('image/jpeg');
+        res.send(data);
+    });
 });
 app.use('/User%20Avatars', (req, res) => {
   const filePath = decodeURIComponent(path.join(process.cwd(), 'public/User Avatars', req.url.replace(/%20/g, ' ')));

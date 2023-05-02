@@ -1531,7 +1531,7 @@ $(document).ready(function(){
                 }
                 let timeout = requestTimeout;
                 if(main_api == 'horde'){
-                    timeout = 5*60*1000;
+                    timeout = 10*60*1000;
                 }
                 jQuery.ajax({    
                     type: 'POST', // 
@@ -1672,6 +1672,13 @@ $(document).ready(function(){
                         hordeCheck = false;
                         $( "#send_button" ).css("display", "block");
                         $( "#loading_mes" ).css("display", "none");
+                        if (exception instanceof $.Deferred().constructor.TimeoutError) {
+                            // Handle timeout error
+                            callPopup('Timeout', 'alert_error');
+                        } else {
+                            // Handle other errors
+                            callPopup(exception, 'alert_error');
+                        }
                         console.log(exception);
                         console.log(jqXHR);
                     }
