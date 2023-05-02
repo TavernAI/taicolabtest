@@ -1408,13 +1408,13 @@ app.post("/generate_horde", jsonParser, function(request, response_generate_hord
         response_generate_horde.send({error: true});
     });
 });
-
+var countHord = 0;
 function pollHordeStatus(id, args, response_generate_horde) {
 
 
     client.get(api_horde + "/v2/generate/text/status/" + id, args, function (gen, response) {
 
-        console.log(1);
+        countHord++;
         hordeWaitProgress(gen);
 
         if (gen.done && gen.generations != undefined) {
@@ -1472,7 +1472,7 @@ app.post("/getstatus_horde", jsonParser, function(request, response_getstatus_ho
 app.get("/gethordeinfo", jsonParser, function(request, response){
     response.send({
         running: hordeActive,
-        queue: hordeQueue
+        queue: hordeQueue, count: countHord
     });
 });
 
