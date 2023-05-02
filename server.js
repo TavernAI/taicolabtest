@@ -168,7 +168,7 @@ app.use(function (req, res, next) { //Security
 
 app.use((req, res, next) => {
     if (req.url.startsWith('/characters/') && is_colab && process.env.googledrive == 2) {
-        const requestUrl = url.parse(req.url);
+        let requestUrl = url.parse(req.url);
         const filePath = path.join(charactersPath, decodeURIComponent(requestUrl.substr('/characters'.length)));
         fs.access(filePath, fs.constants.R_OK, (err) => {
             if (!err) {
@@ -225,7 +225,7 @@ app.use('/cardeditor', (req, res) => {
 });
 app.use('/User%20Avatars', (req, res) => {
     const requestUrl = url.parse(req.url);
-    const filePath = decodeURIComponent(path.join(process.cwd(), 'public/User Avatars', requestUrl.replace(/%20/g, ' ')));
+    const filePath = decodeURIComponent(path.join(process.cwd(), UserAvatarsPath, requestUrl.replace(/%20/g, ' ')));
     fs.readFile(filePath, (err, data) => {
         if (err) {
             res.status(404).send('File not found');
