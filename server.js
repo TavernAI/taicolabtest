@@ -1403,6 +1403,7 @@ app.post("/generate_horde", jsonParser, function(request, response_generate_hord
             response_generate_horde.send({error: true});
         }
     }).on('error', function (err) {
+        hordeActive = false;
         console.log(err);
         //console.log('something went wrong on the request', err.request.options);
         response_generate_horde.send({error: true});
@@ -1426,6 +1427,7 @@ function pollHordeStatus(id, args, response_generate_horde) {
         }
         setTimeout(() => pollHordeStatus(id, args, response_generate_horde), 3000);
     }).on('error', function (err) {
+        hordeActive = false;
         console.log(err);
         //console.log('something went wrong on the request', err.request.options);
         response_generate_horde.send({error: true});
@@ -1435,12 +1437,15 @@ function pollHordeStatus(id, args, response_generate_horde) {
 }
 
 function hordeWaitProgress(data){
+    if(data.queue_position !== undefined){
+        hordeQueue = data.queue_position
+    }
     try {
         process.stdout.clearLine();
         process.stdout.cursorTo(0);
         var progress = "";
 
-        hordeQueue = data.queue_position;
+        
 
         if (data.queue_position > 0) {
             process.stdout.write("Queue position: " + data.queue_position);
