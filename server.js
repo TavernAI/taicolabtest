@@ -941,6 +941,7 @@ app.post("/iscolab", jsonParser, function(request, response){
         url = String(process.env.colaburl).trim();
     }
     let type = undefined;
+
     if(process.env.colab == 2){
         type = 'kobold_model';
     }
@@ -1422,7 +1423,7 @@ app.post("/generate_horde", jsonParser, function(request, response_generate_hord
         response_generate.send({error: true});
     });
 });
-
+var hordedata;
 function hordeWaitProgress(data){
     try {
         process.stdout.clearLine();
@@ -1430,7 +1431,8 @@ function hordeWaitProgress(data){
         var progress = "";
 
         hordeQueue = data.queue_position;
-
+hordedata = data;
+console.log(data)
         if (data.queue_position > 0) {
             process.stdout.write("Queue position: " + data.queue_position);
         } else if (data.wait_time > 0) {
@@ -1461,7 +1463,7 @@ app.post("/getstatus_horde", jsonParser, function(request, response_getstatus_ho
 app.get("/gethordeinfo", jsonParser, function(request, response){
     response.send({
         running: hordeActive,
-        queue: hordeQueue
+        queue: hordeQueue, data: hordedata
     });
 });
 
