@@ -1386,7 +1386,10 @@ app.post("/generate_horde", jsonParser, function(request, response_generate_hord
 
     var args = {
         data: this_settings,
-        headers: {"Content-Type": "application/json", "apikey": request.body.horde_api_key}
+        headers: {"Content-Type": "application/json", "apikey": request.body.horde_api_key},
+        requestConfig: {
+            timeout: 10 * 60 * 1000
+        }
     };
 
     console.log(this_settings);
