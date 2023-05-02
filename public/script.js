@@ -551,6 +551,9 @@ $(document).ready(function(){
                         let selectElement = $("#horde_model_select");
                         let numOptions = selectElement.children("option").length;
                         let randomIndex = Math.floor(Math.random() * numOptions);
+                        if(randomIndex === 0){
+                            randomIndex++;
+                        }
                         selectElement.prop("selectedIndex", randomIndex);
                         selectElement.trigger("change");
                         $('#colab_shadow_popup').css('display', 'none');
