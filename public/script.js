@@ -547,6 +547,13 @@ $(document).ready(function(){
                     });
 
                     is_pygmalion = true;
+                    if(is_colab){
+                        let selectElement = $("#horde_model_select");
+                        let numOptions = selectElement.children("option").length;
+                        let randomIndex = Math.floor(Math.random() * numOptions);
+                        selectElement.prop("selectedIndex", randomIndex);
+                        selectElement.trigger("change");
+                    }
                     resultCheckStatusHorde();
                 },
                 error: function (jqXHR, exception) {
@@ -638,13 +645,7 @@ $(document).ready(function(){
                     $("#main_api").change();
                     setTimeout(function () {
                         $('#api_button_horde').click();
-                        setTimeout(function () {
-                            let selectElement = $("#horde_model_select");
-                            let numOptions = selectElement.children("option").length;
-                            let randomIndex = Math.floor(Math.random() * numOptions);
-                            selectElement.prop("selectedIndex", randomIndex);
-                            selectElement.trigger("change");
-                        }, 2000);
+                        
                     }, 2000);
 
                 }
