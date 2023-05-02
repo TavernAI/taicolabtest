@@ -607,8 +607,8 @@ $(document).ready(function(){
         const response = await fetch("/iscolab", {
             method: "POST",
             headers: {
-                                        "Content-Type": "application/json",
-                                        "X-CSRF-Token": token
+                "Content-Type": "application/json",
+                "X-CSRF-Token": token
                                 },
             body: JSON.stringify({
                         "": ""
@@ -620,12 +620,39 @@ $(document).ready(function(){
             if(getData.colaburl != false){
                 $('#colab_shadow_popup').css('display', 'none');
                 is_colab = true;
-                let url = String(getData.colaburl).split("flare.com")[0] + "flare.com";
-                url = String(url).split("loca.lt")[0] + "loca.lt";
-                $('#api_url_text').val(url);
-                setTimeout(function() {
-                    $('#api_button').click();
-                }, 2000);
+                let url;
+                if (getData.colab_type == "kobold_model") {
+                    url = String(getData.colaburl).split("flare.com")[0] + "flare.com";
+                    url = String(url).split("loca.lt")[0] + "loca.lt";
+                    $('#api_url_text').val(url);
+                    setTimeout(function () {
+                        $('#api_button').click();
+                    }, 2000);
+                }
+                
+                if(getData.colab_type == "kobold_horde"){
+                    main_api = "horde";
+                    $("#main_api option[value=horde]").attr('selected', 'true');
+                    setTimeout(function () {
+                        $('#api_button_horde').click();
+                        setTimeout(function () {
+                            let selectElement = $("#horde_model_select");
+                            let numOptions = selectElement.children("option").length;
+                            let randomIndex = Math.floor(Math.random() * numOptions);
+                            selectElement.prop("selectedIndex", randomIndex);
+                        }, 2000);
+                    }, 2000);
+
+                }
+                if(getData.colab_type == "openai"){
+                    url = getData.colaburl;
+                    main_api = "openai";
+                    $("#main_api option[value=openai]").attr('selected', 'true');
+                    $('#api_key_openai').val(url);
+                    setTimeout(function () {
+                        $('#api_button_openai').click();
+                    }, 1000);
+                }
             }
 
 

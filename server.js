@@ -94,9 +94,11 @@ var is_colab = false;
 var charactersPath = 'public/characters/';
 var worldPath = 'public/worlds/';
 var chatsPath = 'public/chats/';
+var UserAvatarsPath = 'public/User Avatars/';
 if (is_colab && process.env.googledrive == 2){
     charactersPath = '/content/drive/MyDrive/TavernAI/characters/';
     chatsPath = '/content/drive/MyDrive/TavernAI/chats/';
+    UserAvatarsPath = '/content/drive/MyDrive/TavernAI/UserAvatars/';
 }
 const jsonParser = express.json({limit: '100mb'});
 const urlencodedParser = express.urlencoded({extended: true, limit: '100mb'});
@@ -927,9 +929,9 @@ app.post("/importworld", urlencodedParser, async function(request, response){
 
 app.post("/getbackgrounds", jsonParser, function(request, response){
     var images = getImages("public/backgrounds");
-    if(is_colab === true){
-        images = ['tavern.png'];
-    }
+    //if(is_colab === true){
+        //images = ['tavern.png'];
+    //}
     response.send(JSON.stringify(images));
     
 });
@@ -938,11 +940,21 @@ app.post("/iscolab", jsonParser, function(request, response){
     if(process.env.colaburl !== undefined){
         send_data = String(process.env.colaburl).trim();
     }
-    response.send({colaburl:send_data});
+    let type;
+    if(process.env.colab == 2){
+        type = 'kobold_model';
+    }
+    if(process.env.colab == 3){
+        type = 'kobold_horde';
+    }
+    if(process.env.colab == 4){
+        type = 'openai';
+    }
+    response.send({colaburl: send_data, colab_type: process.env.colab});
     
 });
 app.post("/getuseravatars", jsonParser, function(request, response){
-    var images = getImages("public/User Avatars");
+    var images = getImages(UserAvatarsPath);
     response.send(JSON.stringify(images));
     
 });
