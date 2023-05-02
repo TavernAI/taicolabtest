@@ -1522,10 +1522,9 @@ $(document).ready(function(){
                 // HORDE
                 if(main_api == 'horde'){
                     generate_url = '/generate_horde';
-                    if(hordeCheck) {
-                        clearInterval(hordeCheck);
-                    }
-                    hordeCheck = setInterval(updateHordeStats.bind(this), 5000);
+
+                    hordeCheck = true;
+                    updateHordeStats();
                 }
                 if(main_api == 'openai'){
                     generate_url = '/generate_openai';
@@ -1558,8 +1557,7 @@ $(document).ready(function(){
                             if(main_api == 'horde'){
                                 getMessage = data.generations[0].text;
                                 if(hordeCheck) {
-                                    clearInterval(hordeCheck);
-                                    hordeCheck = null;
+                                    hordeCheck = false;
                                     document.getElementById("hordeInfo").classList.remove("hidden");
                                     document.getElementById("hordeQueue").innerHTML = "-";
                                 }
@@ -3432,13 +3430,15 @@ $(document).ready(function(){
             cache: false,
             contentType: "application/json",
             success: function(data) {
-                console.log(data);
                 if(data.running && data.queue > 0) {
                     document.getElementById("hordeInfo").classList.remove("hidden");
                     document.getElementById("hordeQueue").innerHTML = String(data.queue);
                 } else {
                     document.getElementById("hordeInfo").classList.remove("hidden");
                     document.getElementById("hordeQueue").innerHTML = "-";
+                }
+                if(hordeCheck){
+                    setTimeout(updateHordeStats, 1000);
                 }
             },
             error: function (jqXHR, exception) {

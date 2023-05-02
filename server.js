@@ -1392,20 +1392,14 @@ app.post("/generate_horde", jsonParser, function(request, response_generate_hord
     client.post(api_horde+"/v2/generate/text/async", args, function (data, response) {
         if(response.statusCode == 202){
             console.log(data);
-            var waiting = setInterval(function(){
-                client.get(api_horde+"/v2/generate/text/status/"+data.id, args, function (gen, response) {
-                    datagen = gen;
-                    hordeWaitProgress(gen);
-                    if (gen.done && gen.generations != undefined){
-                        hordeActive = false;
-                        hordeQueue = 0;
-                        //console.log({ Kudos: gen.kudos })
-                        //console.log(gen.generations)
-                        //response_generate_horde.send(gen);
-                        clearInterval(waiting);
-                    }
-                });
-            }, 5000);
+            pollHordeStatus(data.id, args, response_generate_horde)
+                    .then((gen) => {
+
+                    })
+                    .catch((err) => {
+                        console.log(err);
+                        response_generate.send({error: true});
+                    });
         }
 
         if(response.statusCode == 401){
@@ -1422,18 +1416,40 @@ app.post("/generate_horde", jsonParser, function(request, response_generate_hord
         response_generate.send({error: true});
     });
 });
-var datagen = {};
+
+function pollHordeStatus(id, args, response_generate_horde) {
+    return new Promise((resolve, reject) => {
+        const poll = () => {
+            client.get(api_horde + "/v2/generate/text/status/" + id, args, function (gen, response) {
+
+                hordeWaitProgress(gen);
+
+                if (gen.done && gen.generations != undefined) {
+                    hordeActive = false;
+                    hordeQueue = 0;
+                    console.log({Kudos: gen.kudos});
+                    console.log(gen.generations);
+                    response_generate_horde.send(gen);
+                    resolve(gen);
+                }
+            });
+        };
+        setTimeout(poll, 5000);
+    });
+}
+
 function hordeWaitProgress(data){
     try {
-        //process.stdout.clearLine();
-        //process.stdout.cursorTo(0);
+        process.stdout.clearLine();
+        process.stdout.cursorTo(0);
         var progress = "";
 
         hordeQueue = data.queue_position;
+
         if (data.queue_position > 0) {
-            //process.stdout.write("Queue position: " + data.queue_position);
+            process.stdout.write("Queue position: " + data.queue_position);
         } else if (data.wait_time > 0) {
-            //process.stdout.write("Wait time: " + data.wait_time);
+            process.stdout.write("Wait time: " + data.wait_time);
         }
     } catch (error) {
         return;
@@ -1458,7 +1474,10 @@ app.post("/getstatus_horde", jsonParser, function(request, response_getstatus_ho
 });
 
 app.get("/gethordeinfo", jsonParser, function(request, response){
-    response.send(datagen);
+    response.send({
+        running: hordeActive,
+        queue: hordeQueue
+    });
 });
 
 
