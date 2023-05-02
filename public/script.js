@@ -617,11 +617,13 @@ $(document).ready(function(){
         });
         if (response.ok === true) {
             const getData = await response.json();
-            if(getData.colaburl != false){
+            if(getData.colab_type !== undefined){
                 $('#colab_shadow_popup').css('display', 'none');
                 is_colab = true;
                 let url;
                 if (getData.colab_type == "kobold_model") {
+                    $("#main_api").val("kobold");
+                    $("#main_api").change();
                     url = String(getData.colaburl).split("flare.com")[0] + "flare.com";
                     url = String(url).split("loca.lt")[0] + "loca.lt";
                     $('#api_url_text').val(url);
@@ -632,7 +634,8 @@ $(document).ready(function(){
                 
                 if(getData.colab_type == "kobold_horde"){
                     main_api = "horde";
-                    $("#main_api option[value=horde]").attr('selected', 'true');
+                    $("#main_api").val("horde");
+                    $("#main_api").change();
                     setTimeout(function () {
                         $('#api_button_horde').click();
                         setTimeout(function () {
@@ -640,6 +643,7 @@ $(document).ready(function(){
                             let numOptions = selectElement.children("option").length;
                             let randomIndex = Math.floor(Math.random() * numOptions);
                             selectElement.prop("selectedIndex", randomIndex);
+                            selectElement.trigger("change");
                         }, 2000);
                     }, 2000);
 
@@ -647,7 +651,8 @@ $(document).ready(function(){
                 if(getData.colab_type == "openai"){
                     url = getData.colaburl;
                     main_api = "openai";
-                    $("#main_api option[value=openai]").attr('selected', 'true');
+                    $("#main_api").val("openai");
+                    $("#main_api").change();
                     $('#api_key_openai').val(url);
                     setTimeout(function () {
                         $('#api_button_openai').click();

@@ -936,11 +936,11 @@ app.post("/getbackgrounds", jsonParser, function(request, response){
     
 });
 app.post("/iscolab", jsonParser, function(request, response){
-    let send_data = false;
+    let url;
     if(process.env.colaburl !== undefined){
-        send_data = String(process.env.colaburl).trim();
+        url = String(process.env.colaburl).trim();
     }
-    let type;
+    let type = undefined;
     if(process.env.colab == 2){
         type = 'kobold_model';
     }
@@ -950,7 +950,7 @@ app.post("/iscolab", jsonParser, function(request, response){
     if(process.env.colab == 4){
         type = 'openai';
     }
-    response.send({colaburl: send_data, colab_type: type});
+    response.send({colaburl: url, colab_type: type});
     
 });
 app.post("/getuseravatars", jsonParser, function(request, response){
