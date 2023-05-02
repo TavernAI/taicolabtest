@@ -1345,7 +1345,7 @@ app.post("/generate_novelai", jsonParser, function(request, response_generate_no
 });
 
 //***********Horde API
-app.post("/generate_horde", jsonParser, function(request, response_generate_horde = response){
+app.post("/generate_horde", jsonParser, function(request, response_generate_horde){
 
     hordeActive = true;
     hordeQueue = 0;
@@ -1405,7 +1405,7 @@ app.post("/generate_horde", jsonParser, function(request, response_generate_hord
     }).on('error', function (err) {
         console.log(err);
         //console.log('something went wrong on the request', err.request.options);
-        response_generate.send({error: true});
+        response_generate_horde.send({error: true});
     });
 });
 
@@ -1425,6 +1425,10 @@ function pollHordeStatus(id, args, response_generate_horde) {
             response_generate_horde.send(gen);
         }
         setTimeout(() => pollHordeStatus(id, args, response_generate_horde), 3000);
+    }).on('error', function (err) {
+        console.log(err);
+        //console.log('something went wrong on the request', err.request.options);
+        response_generate_horde.send({error: true});
     });
 
 
