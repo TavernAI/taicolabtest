@@ -950,7 +950,7 @@ app.post("/iscolab", jsonParser, function(request, response){
     if(process.env.colab == 4){
         type = 'openai';
     }
-    response.send({colaburl: send_data, colab_type: process.env.colab});
+    response.send({colaburl: send_data, colab_type: type});
     
 });
 app.post("/getuseravatars", jsonParser, function(request, response){
