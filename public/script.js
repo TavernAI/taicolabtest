@@ -553,6 +553,7 @@ $(document).ready(function(){
                         let randomIndex = Math.floor(Math.random() * numOptions);
                         selectElement.prop("selectedIndex", randomIndex);
                         selectElement.trigger("change");
+                        $('#colab_shadow_popup').css('display', 'none');
                     }
                     resultCheckStatusHorde();
                 },
@@ -625,7 +626,6 @@ $(document).ready(function(){
         if (response.ok === true) {
             const getData = await response.json();
             if(getData.colab_type !== undefined){
-                $('#colab_shadow_popup').css('display', 'none');
                 is_colab = true;
                 let url;
                 if (getData.colab_type == "kobold_model") {
@@ -636,6 +636,7 @@ $(document).ready(function(){
                     $('#api_url_text').val(url);
                     setTimeout(function () {
                         $('#api_button').click();
+                        $('#colab_shadow_popup').css('display', 'none');
                     }, 2000);
                 }
                 
@@ -657,6 +658,7 @@ $(document).ready(function(){
                     $('#api_key_openai').val(url);
                     setTimeout(function () {
                         $('#api_button_openai').click();
+                        $('#colab_shadow_popup').css('display', 'none');
                     }, 1000);
                 }
             }

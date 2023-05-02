@@ -929,9 +929,9 @@ app.post("/importworld", urlencodedParser, async function(request, response){
 
 app.post("/getbackgrounds", jsonParser, function(request, response){
     var images = getImages("public/backgrounds");
-    //if(is_colab === true){
-        //images = ['tavern.png'];
-    //}
+    if(is_colab === true){
+        images = ['tavern.png'];
+    }
     response.send(JSON.stringify(images));
     
 });
