@@ -49,8 +49,7 @@ const autorun = config.autorun;
 const characterFormat = config.characterFormat;
 const charaCloudMode = config.charaCloudMode;
 const charaCloudServer = config.charaCloudServer;
-let connectionTimeoutMS = config.connectionTimeoutMS;
-connectionTimeoutMS = 60*10*1000;
+const connectionTimeoutMS = config.connectionTimeoutMS;
 const csrf_token = config.csrf_token;
 
 global.BETA_KEY;
@@ -100,7 +99,7 @@ var UserAvatarsPath = 'public/User Avatars/';
 if (is_colab && process.env.googledrive == 2){
     charactersPath = '/content/drive/MyDrive/TavernAI/characters/';
     chatsPath = '/content/drive/MyDrive/TavernAI/chats/';
-    UserAvatarsPath = '/content/drive/MyDrive/TavernAI/UserAvatars/';
+    UserAvatarsPath = '/content/drive/MyDrive/TavernAI/User Avatars/';
 }
 const jsonParser = express.json({limit: '100mb'});
 const urlencodedParser = express.urlencoded({extended: true, limit: '100mb'});
@@ -225,15 +224,16 @@ app.use('/cardeditor', (req, res) => {
     });
 });
 app.use('/User%20Avatars', (req, res) => {
-  const filePath = decodeURIComponent(path.join(process.cwd(), 'public/User Avatars', req.url.replace(/%20/g, ' ')));
-  fs.readFile(filePath, (err, data) => {
-    if (err) {
-      res.status(404).send('File not found');
-      return;
-    }
-    //res.contentType('image/jpeg');
-    res.send(data);
-  });
+    const requestUrl = url.parse(req.url);
+    const filePath = decodeURIComponent(path.join(process.cwd(), 'public/User Avatars', requestUrl.replace(/%20/g, ' ')));
+    fs.readFile(filePath, (err, data) => {
+        if (err) {
+            res.status(404).send('File not found');
+            return;
+        }
+        //res.contentType('image/jpeg');
+        res.send(data);
+    });
 });
 app.use(multer({dest:"uploads"}).single("avatar"));
 app.get("/", function(request, response){
@@ -1389,7 +1389,7 @@ app.post("/generate_horde", jsonParser, function(request, response_generate_hord
         data: this_settings,
         headers: {"Content-Type": "application/json", "apikey": request.body.horde_api_key},
         requestConfig: {
-            timeout: 10 * 60 * 1000
+            timeout: 10 * 600 * 1000
         }
     };
 

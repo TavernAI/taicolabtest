@@ -229,7 +229,7 @@ $(document).ready(function(){
     var colab_ini_step = 1;
     
     
-    var requestTimeout = 10*60*1000;
+    var requestTimeout = 1*60*1000;
     jQuery.ajax({
         type: "GET",
         url: "/timeout",
