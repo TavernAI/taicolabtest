@@ -3432,6 +3432,7 @@ $(document).ready(function(){
             cache: false,
             contentType: "application/json",
             success: function(data) {
+                console.log(data);
                 if(data.running && data.queue > 0) {
                     document.getElementById("hordeInfo").classList.remove("hidden");
                     document.getElementById("hordeQueue").innerHTML = String(data.queue);
