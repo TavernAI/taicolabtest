@@ -183,7 +183,7 @@ app.use((req, res, next) => {
     }
 });
 app.use((req, res, next) => {
-    if (req.url.startsWith('/User Avatars/') && is_colab && process.env.googledrive == 2) {
+    if (req.url.startsWith('/User%20Avatars/') && is_colab && process.env.googledrive == 2) {
         let requestUrl = url.parse(req.url);
         const filePath = path.join(UserAvatarsPath, decodeURIComponent(requestUrl.pathname.substr('/User Avatars'.length)));
         fs.access(filePath, fs.constants.R_OK, (err) => {
