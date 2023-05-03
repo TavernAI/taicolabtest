@@ -228,25 +228,14 @@ app.use('/User%20Avatars', (req, res) => {
     const filePath = decodeURIComponent(path.join(process.cwd(), UserAvatarsPath, requestUrl.pathname.replace(/%20/g, ' ')));
     fs.readFile(filePath, (err, data) => {
         if (err) {
-            res.status(404).send('File not found');
+            res.status(404).send('File not found '+filePath);
             return;
         }
         //res.contentType('image/jpeg');
         res.send(data);
     });
 });
-app.use('/User Avatars', (req, res) => {
-    const requestUrl = url.parse(req.url);
-    const filePath = decodeURIComponent(path.join(process.cwd(), UserAvatarsPath, requestUrl.pathname.replace(/%20/g, ' ')));
-    fs.readFile(filePath, (err, data) => {
-        if (err) {
-            res.status(404).send('File not found');
-            return;
-        }
-        //res.contentType('image/jpeg');
-        res.send(data);
-    });
-});
+
 app.use(multer({dest:"uploads"}).single("avatar"));
 app.get("/", function(request, response){
     response.sendFile(__dirname + "/public/index.html"); 
