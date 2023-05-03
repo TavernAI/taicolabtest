@@ -167,23 +167,22 @@ app.use(function (req, res, next) { //Security
 });
 
 app.use((req, res, next) => {
-  if (req.url.startsWith('/characters/') && is_colab && process.env.googledrive == 2) {
-      
-    const filePath = path.join(charactersPath, decodeURIComponent(req.url.substr('/characters'.length)));
-    fs.access(filePath, fs.constants.R_OK, (err) => {
-      if (!err) {
-        res.sendFile(filePath);
-      } else {
-        res.send('Character not found: '+filePath);
-        //next();
-      }
-    });
-  } else {
-    next();
-  }
+    if (req.url.startsWith('/characters/') && is_colab && process.env.googledrive == 2) {
+        let requestUrl = url.parse(req.url);
+        const filePath = path.join(charactersPath, decodeURIComponent(requestUrl.pathname.substr('/characters'.length)));
+        fs.access(filePath, fs.constants.R_OK, (err) => {
+            if (!err) {
+                res.sendFile(filePath);
+            } else {
+                res.send('Character not found: ' + filePath);
+                //next();
+            }
+        });
+    } else {
+        next();
+    }
 });
 app.use(express.static(__dirname + "/public", { refresh: true }));
-
 
 
 

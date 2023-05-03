@@ -64,7 +64,7 @@ router.post("/characters/load", jsonParser, function(request, response_characlou
                     let char = json5.parse(char_json);
                     let card_name = setCardName(char.name);
                     let character_data = charaFormatData(char);
-                    await charaWrite(filename, JSON.stringify(character_data), path.join('public', 'characters', card_name), characterFormat);
+                    await charaWrite(filename, JSON.stringify(character_data), `./${charactersPath}${card_name}`, characterFormat);
                     character_data.filename = `${card_name}.${characterFormat}`;
                     return response_characloud_loadcard.status(200).json(character_data);
                 } catch (error) {
