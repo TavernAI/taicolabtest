@@ -977,7 +977,7 @@ app.post("/adduseravatar", urlencodedParser, function(request, response){
         sharp(img_path+img_file)
             .resize(400, 600)
             .toFormat('webp')
-            .toFile('public/User Avatars/'+img_file+fileType, (err) => {
+            .toFile(`${UserAvatarsPath}+${img_file}+${fileType}`, (err) => {
                 if(err) {
                     console.log(err);
                     return response.status(400).send(err); 
@@ -995,7 +995,7 @@ app.post("/adduseravatar", urlencodedParser, function(request, response){
 app.post("/deleteuseravatar", jsonParser, function (request, response) {
     try {
         let filename = request.body.filename;
-        let filePath = path.join(__dirname, 'public', 'User Avatars', filename);
+        let filePath = `${UserAvatarsPath}${filename}`;
         fs.unlinkSync(filePath);
         return response.status(200).json({});
     } catch (err) {
