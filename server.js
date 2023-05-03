@@ -167,53 +167,54 @@ app.use(function (req, res, next) { //Security
 });
 
 app.use((req, res, next) => {
-    if (req.url.startsWith('/characters/') && is_colab && process.env.googledrive == 2) {
-
-        const filePath = path.join(charactersPath, decodeURIComponent(req.url.substr('/characters'.length)));
-        fs.access(filePath, fs.constants.R_OK, (err) => {
-            if (!err) {
-                res.sendFile(filePath);
-            } else {
-                res.send('Character not found: ' + filePath);
-                //next();
-            }
-        });
-    } else {
-        next();
-    }
+  if (req.url.startsWith('/characters/') && is_colab && process.env.googledrive == 2) {
+      
+    const filePath = path.join(charactersPath, decodeURIComponent(req.url.substr('/characters'.length)));
+    fs.access(filePath, fs.constants.R_OK, (err) => {
+      if (!err) {
+        res.sendFile(filePath);
+      } else {
+        res.send('Character not found: '+filePath);
+        //next();
+      }
+    });
+  } else {
+    next();
+  }
 });
-app.use(express.static(__dirname + "/public", {refresh: true}));
+app.use(express.static(__dirname + "/public", { refresh: true }));
 
 
 
 
 
 app.use('/backgrounds', (req, res) => {
-    const filePath = decodeURIComponent(path.join(process.cwd(), 'public/backgrounds', req.url.replace(/%20/g, ' ')));
-    fs.readFile(filePath, (err, data) => {
-        if (err) {
-            res.status(404).send('File not found');
-            return;
-        }
-        //res.contentType('image/jpeg');
-        res.send(data);
-    });
+  const filePath = decodeURIComponent(path.join(process.cwd(), 'public/backgrounds', req.url.replace(/%20/g, ' ')));
+  fs.readFile(filePath, (err, data) => {
+    if (err) {
+      res.status(404).send('File not found');
+      return;
+    }
+    //res.contentType('image/jpeg');
+    res.send(data);
+  });
 });
 app.use('/characters', (req, res) => {
     let filePath = decodeURIComponent(path.join(process.cwd(), charactersPath, req.url.replace(/%20/g, ' ')));
     filePath = filePath.split('?v=');
     filePath = filePath[0];
     fs.readFile(filePath, (err, data) => {
-        if (err) {
-            res.status(404).send('File not found');
-            return;
-        }
-        //res.contentType('image/jpeg');
-        res.send(data);
-    });
+    if (err) {
+        res.status(404).send('File not found');
+        return;
+    }
+    //res.contentType('image/jpeg');
+    res.send(data);
+  });
 });
 app.use('/cardeditor', (req, res) => {
-    const filePath = decodeURIComponent(path.join(process.cwd(), 'public/cardeditor', req.url.replace(/%20/g, ' ')));
+    const requestUrl = url.parse(req.url);
+    const filePath = decodeURIComponent(path.join(process.cwd(), 'public/cardeditor', requestUrl.pathname.replace(/%20/g, ' ')));
     fs.readFile(filePath, (err, data) => {
         if (err) {
             res.status(404).send('File not found');
@@ -224,7 +225,8 @@ app.use('/cardeditor', (req, res) => {
     });
 });
 app.use('/User%20Avatars', (req, res) => {
-    const filePath = decodeURIComponent(path.join(process.cwd(), 'public/User Avatars', req.url.replace(/%20/g, ' ')));
+    const requestUrl = url.parse(req.url);
+    const filePath = decodeURIComponent(path.join(process.cwd(), UserAvatarsPath, requestUrl.pathname.replace(/%20/g, ' ')));
     fs.readFile(filePath, (err, data) => {
         if (err) {
             res.status(404).send('File not found');
