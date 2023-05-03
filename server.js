@@ -182,6 +182,22 @@ app.use((req, res, next) => {
         next();
     }
 });
+app.use((req, res, next) => {
+    if (req.url.startsWith('/User Avatars/') && is_colab && process.env.googledrive == 2) {
+        let requestUrl = url.parse(req.url);
+        const filePath = path.join(UserAvatarsPath, decodeURIComponent(requestUrl.pathname.substr('/User Avatars'.length)));
+        fs.access(filePath, fs.constants.R_OK, (err) => {
+            if (!err) {
+                res.sendFile(filePath);
+            } else {
+                res.send('Avatar not found: ' + filePath);
+                //next();
+            }
+        });
+    } else {
+        next();
+    }
+});
 app.use(express.static(__dirname + "/public", { refresh: true }));
 
 
@@ -228,7 +244,7 @@ app.use('/User%20Avatars', (req, res) => {
     const filePath = decodeURIComponent(path.join(process.cwd(), UserAvatarsPath, requestUrl.pathname.replace(/%20/g, ' ')));
     fs.readFile(filePath, (err, data) => {
         if (err) {
-            res.status(404).send('File not found '+filePath);
+            res.status(404).send('File not found ');
             return;
         }
         //res.contentType('image/jpeg');
