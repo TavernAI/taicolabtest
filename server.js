@@ -977,7 +977,7 @@ app.post("/adduseravatar", urlencodedParser, function(request, response){
         sharp(img_path+img_file)
             .resize(400, 600)
             .toFormat('webp')
-            .toFile(`${UserAvatarsPath}+${img_file}+${fileType}`, (err) => {
+            .toFile(`${UserAvatarsPath}${img_file}${fileType}`, (err) => {
                 if(err) {
                     console.log(err);
                     return response.status(400).send(err); 
