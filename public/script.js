@@ -128,6 +128,7 @@ $(document).ready(function(){
     var this_edit_mes_chname = '';
     var this_edit_mes_id;
     var this_edit_target_id = undefined;
+    var this_max_gen = 0;
 
     const delay = ms => new Promise(res => setTimeout(res, ms));
     //settings
@@ -152,6 +153,7 @@ $(document).ready(function(){
     var is_pygmalion = false;
     const pygmalion_formatng_string_indicator = " (Pyg. formatting on)";
     var tokens_already_generated = 0;
+    var this_amount_gen = 0;
     var message_already_generated = '';
     var if_typing_text = false;
     const tokens_first_request_count = 50;
@@ -175,6 +177,7 @@ $(document).ready(function(){
     var editorDescriptionWPP;
 
     var main_api = 'kobold';
+    var generateType;
     //Profile
     var is_login = false;
     var ALPHA_KEY = getCookie('ALPHA_KEY');
@@ -205,6 +208,8 @@ $(document).ready(function(){
     var horde_model = "";
     var hordeCheck;
 
+    var runGenerate;
+
     //openai settings
     var temp_openai = 0.9;
     var top_p_openai = 1.0;
@@ -227,6 +232,9 @@ $(document).ready(function(){
     var css_send_form_display = $('<div id=send_form></div>').css('display');
 
     var colab_ini_step = 1;
+
+    // Mobile
+    var is_mobile_user = navigator.userAgent.match(/Android/i) || navigator.userAgent.match(/iPhone/i);
     
     
     var requestTimeout = 1*60*1000;
@@ -518,7 +526,8 @@ $(document).ready(function(){
         is_api_button_press = false;  
         checkOnlineStatus();
         $("#api_loading").css("display", 'none');
-        $("#api_button").css('display', 'inline-block');
+        if(is_mobile_user){$("#api_button").css('display', 'block');}
+        else{$("#api_button").css('display', 'inline-block');}
     }
 
 
@@ -539,6 +548,8 @@ $(document).ready(function(){
                 contentType: "application/json",
                 success: function(data){
                     if (!('error' in data)) online_status = 'Models list fetched and updated';
+
+                    document.getElementById("hordeQueue").innerHTML = "Connected, model not chosen.";
 
                     $('#horde_model_select').empty();
                     $('#horde_model_select').append($('<option></option>').val('').html('-- Select Model --'));
@@ -561,6 +572,7 @@ $(document).ready(function(){
                     resultCheckStatusHorde();
                 },
                 error: function (jqXHR, exception) {
+                    document.getElementById("hordeQueue").innerHTML = "Unable to connect to Kobold Horde.";
                     online_status = 'no_connection';
                     $('#horde_model_select').empty();
                     $('#horde_model_select').append($('<option></option>').val('').html('-- Connect to Horde for models --'));
@@ -883,9 +895,16 @@ $(document).ready(function(){
             Generate();
         }
     });
-    async function Generate(type) {//encode("dsfs").length
+    async function Generate(type) {
+        generateType = type;
         // HORDE
-        if (main_api == 'horde' && horde_model == '') { return; }
+        if (main_api == 'horde' && horde_model == '') {
+            document.getElementById("hordeInfo").classList.remove("hidden");
+            document.getElementById("hordeQueue").innerHTML = "Error: no horde model chosen.";
+            return;
+        } else {
+            document.getElementById("hordeInfo").classList.add("hidden");
+        }
 
         let gap_holder = 120;
         if(main_api === 'openai' && (model_openai === 'gpt-3.5-turbo' || model_openai === 'gpt-3.5-turbo-0301' || model_openai === 'gpt-4' || model_openai === 'gpt-4-32k')) 
@@ -989,7 +1008,7 @@ $(document).ready(function(){
             /* World info */
             let prepend = [];
             let append = [];
-            if(main_api == 'kobold' && winWorldInfo.worldName && winWorldInfo.worldName.length) {
+            if(winWorldInfo.worldName && winWorldInfo.worldName.length) {
                 let depth = parseInt(document.getElementById("input_worldinfo_depth").value);
                 let budget = parseInt(document.getElementById("input_worldinfo_budget").value);
 
@@ -1166,57 +1185,8 @@ $(document).ready(function(){
             if(type == 'swipe'){
                 chat2.shift();
             }
-            for (var item of chat2) {//console.log(encode("dsfs").length);
-                chatString = item+chatString;
-                if(getTokenCount(storyString+mesExmString+chatString+anchorTop+anchorBottom+charPersonality)+gap_holder < this_max_context){ //(The number of tokens in the entire prompt) need fix, it must count correctly (added +120, so that the description of the character does not hide)
-                    arrMes[arrMes.length] = item;
-                }else{
-                    i = chat2.length-1;
-                }
-                await delay(1); //For disable slow down (encode gpt-2 need fix)
-                //console.log(i+' '+chat.length);
-                
-                
-                
-                if(i == chat2.length-1){
-                    //arrMes[arrMes.length-1] = '<START>\n'+arrMes[arrMes.length-1];
-                    if(!keep_dialog_examples){
-                        for(let iii = 0; iii < mesExamplesArray.length; iii++){//mesExamplesArray It need to make from end to start
 
-                            mesExmString = mesExmString+mesExamplesArray[iii];
-                            if(getTokenCount(storyString+mesExmString+chatString+anchorTop+anchorBottom+charPersonality)+gap_holder < this_max_context){ //example of dialogs
-                                if(!is_pygmalion){
-                                    mesExamplesArray[iii] = mesExamplesArray[iii].replace(/<START>/i, 'This is how '+name2+' should talk');//An example of how '+name2+' responds
-                                }
-                                count_exm_add++;
-                                await delay(1);
-
-                                //arrMes[arrMes.length] = item;
-                            }else{
-
-                                iii = mesExamplesArray.length;
-                            }
-
-                        }
-                    }
-
-                    if(!is_pygmalion){
-                        if(Scenario !== undefined){
-                            if(Scenario.length > 0){
-                                storyString+= 'Circumstances and context of the dialogue: '+Scenario+'\n';
-                            }
-                        }
-                        //storyString+='\nThen the roleplay chat between '+name1+' and '+name2+' begins.\n';
-                    }
-                    runGenerate();
-                    return;
-                }
-                i++;
-
-
-            }
-
-            function runGenerate(cycleGenerationPromt = ''){
+            runGenerate = function(cycleGenerationPromt = ''){
                 generatedPromtCache+=cycleGenerationPromt;
                 if(generatedPromtCache.length == 0){
                     chatString = "";
@@ -1231,7 +1201,7 @@ $(document).ready(function(){
                             //arrMes.splice(-1, 0, openai_jailbreak_prompt);
                             arrMes.push(openai_jailbreak_prompt);
                         }
-                        
+
                     }
 
 
@@ -1262,7 +1232,7 @@ $(document).ready(function(){
                             //chatString+=postAnchor+"\n";//"[Writing style: very long messages]\n";
                             item =item+ anchorBottom+"\n";
                         }
-                        
+
 
                         if(!free_char_name_mode && !(main_api === 'openai' && (model_openai === 'gpt-3.5-turbo' || model_openai === 'gpt-3.5-turbo-0301' || model_openai === 'gpt-4' || model_openai === 'gpt-4-32k'))){
                             if(i >= arrMes.length-1 && $.trim(item).substr(0, (name1+":").length) == name1+":"){//for add name2 when user sent
@@ -1274,7 +1244,7 @@ $(document).ready(function(){
                                 }
                             }
                         }
-                        
+
                         if(is_pygmalion){
                             if($.trim(item).indexOf(name1) === 0){
                                 item = item.replace(name1+':', 'You:');
@@ -1289,7 +1259,7 @@ $(document).ready(function(){
 
                 //console.log(encode(characters[Characters.selectedID].description+chatString).length);
                 //console.log(encode(JSON.stringify(characters[Characters.selectedID].description+chatString)).length);
-                
+
                 //console.log(JSON.stringify(storyString));
                 //Send story string
                 var mesSendString = '';
@@ -1340,8 +1310,8 @@ $(document).ready(function(){
                 if(main_api === 'openai' && (model_openai === 'gpt-3.5-turbo' || model_openai === 'gpt-3.5-turbo-0301' || model_openai === 'gpt-4' || model_openai === 'gpt-4-32k')){
                     finalPromt = {};
                     finalPromt = [];
-                    
-                    
+
+
                     finalPromt[0] = {"role": "system", "content": storyString+mesExmString};
                     mesSend.forEach(function(item,i){
                         if (openai_jailbreak_prompt.length > 0 && i === mesSend.length-1) {
@@ -1355,7 +1325,7 @@ $(document).ready(function(){
                         }
 
                     });
- 
+
                 }else{
                     finalPromt = storyString+mesExmString+mesSendString+generatedPromtCache;
                 }
@@ -1363,18 +1333,18 @@ $(document).ready(function(){
                 var generate_data;
                 switch(main_api){
                     case 'kobold':
-                            var this_amount_gen = parseInt(amount_gen);
-                            break;
+                        this_amount_gen = parseInt(amount_gen);
+                        break;
                     case 'novel':
-                            var this_amount_gen = parseInt(amount_gen_novel);
-                            break;
+                        this_amount_gen = parseInt(amount_gen_novel);
+                        break;
                     case 'openai':
-                            var this_amount_gen = parseInt(amount_gen_openai);
-                            break;
+                        this_amount_gen = parseInt(amount_gen_openai);
+                        break;
                 }
-                var this_max_gen = this_amount_gen;
+                this_max_gen = this_amount_gen;
                 if(multigen && (main_api === 'kobold' || main_api === 'novel')){ //Multigen is not necessary for OpenAI (Uses stop tokens)
-                    
+
                     let this_set_context_size;
                     if(main_api === 'kobold') this_set_context_size = parseInt(amount_gen);
                     if(main_api === 'novel') this_set_context_size = parseInt(amount_gen_novel);
@@ -1398,59 +1368,59 @@ $(document).ready(function(){
                     if(preset_settings != 'gui'){
 
                         var this_settings = koboldai_settings[koboldai_setting_names[preset_settings]];
-                        
-                        
-                        generate_data = {prompt: finalPromt, 
-                                        gui_settings: false, 
-                                        max_context_length: parseInt(this_max_context),//this_settings.max_length,
-                                        max_length: this_amount_gen,//parseInt(amount_gen),
-                                        rep_pen: parseFloat(rep_pen),
-                                        rep_pen_range: parseInt(rep_pen_size),
-                                        rep_pen_slope: parseFloat(rep_pen_slope),
-                                        temperature: parseFloat(temp),
-                                        tfs: parseFloat(tfs),
-                                        top_a: parseFloat(top_a),
-                                        top_k: parseInt(top_k),
-                                        top_p: parseFloat(top_p),
-                                        typical: parseFloat(typical),
-                                        singleline: singleline,
-                                        s1:this_settings.sampler_order[0],
-                                        s2:this_settings.sampler_order[1],
-                                        s3:this_settings.sampler_order[2],
-                                        s4:this_settings.sampler_order[3],
-                                        s5:this_settings.sampler_order[4],
-                                        s6:this_settings.sampler_order[5],
-                                        s7:this_settings.sampler_order[6]
-                                        };
+
+
+                        generate_data = {prompt: finalPromt,
+                            gui_settings: false,
+                            max_context_length: parseInt(this_max_context),//this_settings.max_length,
+                            max_length: this_amount_gen,//parseInt(amount_gen),
+                            rep_pen: parseFloat(rep_pen),
+                            rep_pen_range: parseInt(rep_pen_size),
+                            rep_pen_slope: parseFloat(rep_pen_slope),
+                            temperature: parseFloat(temp),
+                            tfs: parseFloat(tfs),
+                            top_a: parseFloat(top_a),
+                            top_k: parseInt(top_k),
+                            top_p: parseFloat(top_p),
+                            typical: parseFloat(typical),
+                            singleline: singleline,
+                            s1:this_settings.sampler_order[0],
+                            s2:this_settings.sampler_order[1],
+                            s3:this_settings.sampler_order[2],
+                            s4:this_settings.sampler_order[3],
+                            s5:this_settings.sampler_order[4],
+                            s6:this_settings.sampler_order[5],
+                            s7:this_settings.sampler_order[6]
+                        };
                     }
                 }
                 if(main_api == 'novel'){
                     var this_settings = novelai_settings[novelai_setting_names[preset_settings_novel]];
                     generate_data = {"input": finalPromt,
-                                    "model": model_novel,
-                                    "use_string": true,
-                                    "temperature": parseFloat(temp_novel),
-                                    "max_length": this_amount_gen,
-                                    "min_length": this_settings.min_length,
-                                    "tail_free_sampling": parseFloat(tfs_novel),
-                                    "top_a": parseFloat(top_a_novel),
-                                    "top_k": parseInt(top_k_novel),
-                                    "top_p": parseFloat(top_p_novel),
-                                    "typical_p": parseFloat(typical_novel),
-                                    "repetition_penalty": parseFloat(rep_pen_novel),
-                                    "repetition_penalty_range": parseInt(rep_pen_size_novel),
-                                    "repetition_penalty_slope": parseFloat(rep_pen_slope_novel),
-                                    "repetition_penalty_frequency": this_settings.repetition_penalty_frequency,
-                                    "repetition_penalty_presence": this_settings.repetition_penalty_presence,
-                                    //"stop_sequences": {{187}},
-                                    //bad_words_ids = {{50256}, {0}, {1}};
-                                    //generate_until_sentence = true;
-                                    "use_cache": false,
-                                    //use_string = true;
-                                    "return_full_text": false,
-                                    "prefix": "vanilla",
-                                    "order": this_settings.order
-                                        };
+                        "model": model_novel,
+                        "use_string": true,
+                        "temperature": parseFloat(temp_novel),
+                        "max_length": this_amount_gen,
+                        "min_length": this_settings.min_length,
+                        "tail_free_sampling": parseFloat(tfs_novel),
+                        "top_a": parseFloat(top_a_novel),
+                        "top_k": parseInt(top_k_novel),
+                        "top_p": parseFloat(top_p_novel),
+                        "typical_p": parseFloat(typical_novel),
+                        "repetition_penalty": parseFloat(rep_pen_novel),
+                        "repetition_penalty_range": parseInt(rep_pen_size_novel),
+                        "repetition_penalty_slope": parseFloat(rep_pen_slope_novel),
+                        "repetition_penalty_frequency": this_settings.repetition_penalty_frequency,
+                        "repetition_penalty_presence": this_settings.repetition_penalty_presence,
+                        //"stop_sequences": {{187}},
+                        //bad_words_ids = {{50256}, {0}, {1}};
+                        //generate_until_sentence = true;
+                        "use_cache": false,
+                        //use_string = true;
+                        "return_full_text": false,
+                        "prefix": "vanilla",
+                        "order": this_settings.order
+                    };
                 }
 
                 // HORDE
@@ -1504,13 +1474,13 @@ $(document).ready(function(){
                         "stop": [ name1+':', '<|endoftext|>'],
                         "max_tokens": this_amount_gen
                     };
-                    
+
                     if((model_openai === 'gpt-3.5-turbo' || model_openai === 'gpt-3.5-turbo-0301' || model_openai === 'gpt-4' || model_openai === 'gpt-4-32k')){
                         generate_data.messages = finalPromt;
                     }else{
                         generate_data.prompt = finalPromt;
                     }
-                   
+
                 }
                 var generate_url = '';
                 if(main_api == 'kobold'){
@@ -1522,149 +1492,23 @@ $(document).ready(function(){
                 // HORDE
                 if(main_api == 'horde'){
                     generate_url = '/generate_horde';
-
-                    hordeCheck = true;
-                    updateHordeStats();
                 }
                 if(main_api == 'openai'){
                     generate_url = '/generate_openai';
                 }
-                let timeout = requestTimeout;
-                if(main_api == 'horde'){
-                    timeout = 1*1000*1000;
-                }
-                jQuery.ajax({    
-                    type: 'POST', // 
-                    url: generate_url, // 
+
+                jQuery.ajax({
+                    type: 'POST', //
+                    url: generate_url, //
                     data: JSON.stringify(generate_data),
                     beforeSend: function(){
-                        //$('#create_button').attr('value','Creating...'); 
+                        //$('#create_button').attr('value','Creating...');
                     },
                     cache: false,
-                    timeout: timeout,
+                    timeout: requestTimeout,
                     dataType: "json",
                     contentType: "application/json",
-                    success: function(data){
-                        tokens_already_generated += this_amount_gen;
-                        //$("#send_textarea").focus();
-                        //$("#send_textarea").removeAttr('disabled');
-                        
-                        if(data.error != true){
-                            var getMessage = '';
-                            //const getData = await response.json();
-                            if(main_api == 'kobold'){
-                                getMessage = data.results[0].text;
-                            }
-                            if(main_api == 'novel'){
-                                getMessage = data.output;
-                            }
-                            if(main_api == 'horde'){
-                                getMessage = data.generations[0].text;
-                                if(hordeCheck) {
-                                    hordeCheck = false;
-                                    document.getElementById("hordeInfo").classList.remove("hidden");
-                                    document.getElementById("hordeQueue").innerHTML = "-";
-                                }
-                            }
-                            if(main_api == 'openai'){
-                                if(model_openai === 'gpt-3.5-turbo' || model_openai === 'gpt-3.5-turbo-0301' || model_openai === 'gpt-4' || model_openai === 'gpt-4-32k'){
-                                    getMessage = data.choices[0].message.content;
-                                }else{
-                                    getMessage = data.choices[0].text;
-                                }
-                            }
-                            //Multigen run again
-                            
-                            if(multigen && (main_api === 'kobold' || main_api === 'novel')){
-                                if_typing_text = false;
-
-                                if(type === 'force_name2' && tokens_already_generated === tokens_first_request_count){
-                                    getMessage = name2+": "+getMessage;
-                                }
-                                getMessage = getMessage.replace(/\n+$/, "");
-                                message_already_generated +=getMessage;
-
-                                if(message_already_generated.indexOf('You:') === -1 && message_already_generated.indexOf('<|endoftext|>') === -1 && tokens_already_generated < parseInt(this_max_gen) && getMessage.length > 0){
-                                    runGenerate(getMessage);
-                                    return;
-                                }
-
-                                getMessage = message_already_generated;
-                            }
-                            //Formating
-                            getMessage = $.trim(getMessage);
-                            if(is_pygmalion){
-                                getMessage = getMessage.replace(new RegExp('<USER>', "g"), name1);
-                                getMessage = getMessage.replace(new RegExp('<BOT>', "g"), name2);
-                                getMessage = getMessage.replace(new RegExp('You:', "g"), name1+':');
-                            }
-                            if(getMessage.indexOf(name1+":") != -1){ 
-                                getMessage = getMessage.substr(0,getMessage.indexOf(name1+":"));
-
-                            }
-                            if(getMessage.indexOf('<|endoftext|>') != -1){ 
-                                getMessage = getMessage.substr(0,getMessage.indexOf('<|endoftext|>'));
-
-                            }
-                            let this_mes_is_name = true;
-                            if(getMessage.indexOf(name2+":") === 0){
-                                getMessage = getMessage.replace(name2+':', '');
-                                getMessage = getMessage.trimStart();
-                            }else{
-                                this_mes_is_name = false;
-                            }
-                            if(type === 'force_name2') this_mes_is_name = true;
-                            //getMessage = getMessage.replace(/^\s+/g, '');
-                            if(getMessage.length > 0){
-                                if(chat[chat.length-1]['swipe_id'] === undefined || chat[chat.length-1]['is_user']){
-                                    
-                                    type = 'normal';
-                                }
-                                if(type === 'swipe'){
-                                    
-                                    chat[chat.length-1]['swipes'][chat[chat.length-1]['swipes'].length] = getMessage;
-                                    if(chat[chat.length-1]['swipe_id'] === chat[chat.length-1]['swipes'].length-1){
-                                        chat[chat.length-1]['mes'] = getMessage;
-                                        addOneMessage(chat[chat.length-1], 'swipe');
-                                    }else{
-                                        chat[chat.length-1]['mes'] = getMessage;
-                                    }
-                                    is_send_press = false;
-                                }else{
-                                    chat[chat.length] = {}; //adds one mes in array but then increases length by 1
-                                    chat[chat.length-1]['name'] = name2;
-                                    chat[chat.length-1]['is_user'] = false;
-                                    chat[chat.length-1]['is_name'] = this_mes_is_name;
-                                    chat[chat.length-1]['send_date'] = Date.now();
-                                    getMessage = $.trim(getMessage);
-                                    chat[chat.length-1]['mes'] = getMessage;
-                                    addOneMessage(chat[chat.length-1]);
-                                    is_send_press = false;
-                                }
-                                $( "#send_button" ).css("display", "block");
-                                $( "#loading_mes" ).css("display", "none");
-                                saveChat();
-                                
-                            }else{
-                                //console.log('run force_name2 protocol');
-                                if(free_char_name_mode && main_api !== 'openai')
-                                {
-                                    Generate('force_name2');
-                                }
-                                else
-                                {
-                                    $( "#send_button" ).css("display", "block");
-                                    $( "#loading_mes" ).css("display", "none");
-                                    is_send_press = false;
-                                    callPopup('The model returned empty message', 'alert');
-                                }
-                            }
-                        }else{
-                            is_send_press = false;
-                            $( "#send_button" ).css("display", "block");
-                            $( "#loading_mes" ).css("display", "none");
-                        }
-                    },
+                    success: generateCallback.bind(this),
                     error: function (jqXHR, exception) {
 
                         $("#send_textarea").removeAttr('disabled');
@@ -1680,12 +1524,184 @@ $(document).ready(function(){
                     }
                 });
             }
+
+            for (var item of chat2) {//console.log(encode("dsfs").length);
+                chatString = item+chatString;
+                if(getTokenCount(storyString+mesExmString+chatString+anchorTop+anchorBottom+charPersonality)+gap_holder < this_max_context){ //(The number of tokens in the entire prompt) need fix, it must count correctly (added +120, so that the description of the character does not hide)
+                    arrMes[arrMes.length] = item;
+                }else{
+                    i = chat2.length-1;
+                }
+                await delay(1); //For disable slow down (encode gpt-2 need fix)
+                //console.log(i+' '+chat.length);
+                
+                
+                
+                if(i == chat2.length-1){
+                    //arrMes[arrMes.length-1] = '<START>\n'+arrMes[arrMes.length-1];
+                    if(!keep_dialog_examples){
+                        for(let iii = 0; iii < mesExamplesArray.length; iii++){//mesExamplesArray It need to make from end to start
+
+                            mesExmString = mesExmString+mesExamplesArray[iii];
+                            if(getTokenCount(storyString+mesExmString+chatString+anchorTop+anchorBottom+charPersonality)+gap_holder < this_max_context){ //example of dialogs
+                                if(!is_pygmalion){
+                                    mesExamplesArray[iii] = mesExamplesArray[iii].replace(/<START>/i, 'This is how '+name2+' should talk');//An example of how '+name2+' responds
+                                }
+                                count_exm_add++;
+                                await delay(1);
+
+                                //arrMes[arrMes.length] = item;
+                            }else{
+
+                                iii = mesExamplesArray.length;
+                            }
+
+                        }
+                    }
+
+                    if(!is_pygmalion){
+                        if(Scenario !== undefined){
+                            if(Scenario.length > 0){
+                                storyString+= 'Circumstances and context of the dialogue: '+Scenario+'\n';
+                            }
+                        }
+                        //storyString+='\nThen the roleplay chat between '+name1+' and '+name2+' begins.\n';
+                    }
+                    runGenerate();
+                    return;
+                }
+                i++;
+
+
+            }
+
         }else{
             if(Characters.selectedID == undefined){
                 //send ch sel
                 callPopup('Сharacter is not selected', 'alert');
             }
             is_send_press = false;
+        }
+    }
+
+    function generateCallback(data){
+        tokens_already_generated += this_amount_gen;
+        if(data.error != true){
+            var getMessage = '';
+            if(main_api == 'kobold'){
+                getMessage = data.results[0].text;
+            }
+            if(main_api == 'novel'){
+                getMessage = data.output;
+            }
+            if(main_api == 'horde') {
+                if(!data.generations || !data.generations.length) {
+                    console.log("Horde generation request started.");
+                    hordeCheck = true;
+                    updateHordeStats();
+                    return;
+                } else {
+                    console.log("Horde generation request finished.");
+                    getMessage = data.generations[0].text;
+                }
+            }
+            if(main_api == 'openai'){
+                if(model_openai === 'gpt-3.5-turbo' || model_openai === 'gpt-3.5-turbo-0301' || model_openai === 'gpt-4' || model_openai === 'gpt-4-32k'){
+                    getMessage = data.choices[0].message.content;
+                }else{
+                    getMessage = data.choices[0].text;
+                }
+            }
+            //Multigen run again
+
+            if(multigen && (main_api === 'kobold' || main_api === 'novel')){
+                if_typing_text = false;
+
+                if(generateType === 'force_name2' && tokens_already_generated === tokens_first_request_count){
+                    getMessage = name2+": "+getMessage;
+                }
+                getMessage = getMessage.replace(/\n+$/, "");
+                message_already_generated +=getMessage;
+
+                if(message_already_generated.indexOf('You:') === -1 && message_already_generated.indexOf('<|endoftext|>') === -1 && tokens_already_generated < parseInt(this_max_gen) && getMessage.length > 0){
+                    runGenerate(getMessage);
+                    return;
+                }
+
+                getMessage = message_already_generated;
+            }
+            //Formating
+            getMessage = $.trim(getMessage);
+            if(is_pygmalion){
+                getMessage = getMessage.replace(new RegExp('<USER>', "g"), name1);
+                getMessage = getMessage.replace(new RegExp('<BOT>', "g"), name2);
+                getMessage = getMessage.replace(new RegExp('You:', "g"), name1+':');
+            }
+            if(getMessage.indexOf(name1+":") != -1){
+                getMessage = getMessage.substr(0,getMessage.indexOf(name1+":"));
+
+            }
+            if(getMessage.indexOf('<|endoftext|>') != -1){
+                getMessage = getMessage.substr(0,getMessage.indexOf('<|endoftext|>'));
+
+            }
+            let this_mes_is_name = true;
+            if(getMessage.indexOf(name2+":") === 0){
+                getMessage = getMessage.replace(name2+':', '');
+                getMessage = getMessage.trimStart();
+            }else{
+                this_mes_is_name = false;
+            }
+            if(generateType === 'force_name2') this_mes_is_name = true;
+            //getMessage = getMessage.replace(/^\s+/g, '');
+            if(getMessage.length > 0){
+                if(chat[chat.length-1]['swipe_id'] === undefined || chat[chat.length-1]['is_user']){
+
+                    generateType = 'normal';
+                }
+                if(generateType === 'swipe'){
+
+                    chat[chat.length-1]['swipes'][chat[chat.length-1]['swipes'].length] = getMessage;
+                    if(chat[chat.length-1]['swipe_id'] === chat[chat.length-1]['swipes'].length-1){
+                        chat[chat.length-1]['mes'] = getMessage;
+                        addOneMessage(chat[chat.length-1], 'swipe');
+                    }else{
+                        chat[chat.length-1]['mes'] = getMessage;
+                    }
+                    is_send_press = false;
+                }else{
+                    chat[chat.length] = {}; //adds one mes in array but then increases length by 1
+                    chat[chat.length-1]['name'] = name2;
+                    chat[chat.length-1]['is_user'] = false;
+                    chat[chat.length-1]['is_name'] = this_mes_is_name;
+                    chat[chat.length-1]['send_date'] = Date.now();
+                    getMessage = $.trim(getMessage);
+                    chat[chat.length-1]['mes'] = getMessage;
+                    addOneMessage(chat[chat.length-1]);
+                    is_send_press = false;
+                }
+                $( "#send_button" ).css("display", "block");
+                $( "#loading_mes" ).css("display", "none");
+                saveChat();
+
+            }else{
+                //console.log('run force_name2 protocol');
+                if(free_char_name_mode && main_api !== 'openai')
+                {
+                    Generate('force_name2');
+                }
+                else
+                {
+                    $( "#send_button" ).css("display", "block");
+                    $( "#loading_mes" ).css("display", "none");
+                    is_send_press = false;
+                    callPopup('The model returned empty message', 'alert');
+                }
+            }
+        }else{
+            is_send_press = false;
+            $( "#send_button" ).css("display", "block");
+            $( "#loading_mes" ).css("display", "none");
         }
     }
 
@@ -2121,12 +2137,21 @@ $(document).ready(function(){
     });
     $('#logo_block').click(function(event) {  
         if(!bg_menu_toggle){
-            $('#chara_cloud').transition({  
-                marginLeft: "170px",
-                duration: 300,
-                easing: "",
-                complete: function() {  }
-            });
+            if(is_mobile_user){
+                $('#chara_cloud').transition({  
+                    marginLeft: "10px",
+                    duration: 300,
+                    easing: "",
+                    complete: function() {  }
+                });
+            }else{
+                $('#chara_cloud').transition({  
+                    marginLeft: "170px",
+                    duration: 300,
+                    easing: "",
+                    complete: function() {  }
+                });
+            }
             designs.forEach(function(item, i){
                 $('#style_button'+i).css('opacity', 0.0);
                 $('#style_button'+i).transition({ y: '-10px', opacity: 0.0, duration: 0});
@@ -2144,12 +2169,21 @@ $(document).ready(function(){
                 complete: function() { bg_menu_toggle = true; $('#bg_menu_content').css("overflow-y", "auto");}
               });
         }else{
-            $('#chara_cloud').transition({  
-                marginLeft: "130px",
-                duration: 300,
-                easing: "",
-                complete: function() {  }
-            });
+            if(is_mobile_user){
+                $('#chara_cloud').transition({  
+                    marginLeft: "10px",
+                    duration: 300,
+                    easing: "",
+                    complete: function() {  }
+                });
+            }else{
+                $('#chara_cloud').transition({  
+                    marginLeft: "130px",
+                    duration: 300,
+                    easing: "",
+                    complete: function() {  }
+                });
+            }
             designs.forEach(function(item, i){
                 setTimeout(() => {
                     $('#style_button'+i).transition({ y: '-15px',opacity: 0.0, duration: 100});
@@ -2440,7 +2474,7 @@ $(document).ready(function(){
                 $('.characloud_content').css('display', 'none');
                 $('#characloud_user_profile_block').css('display', 'none');
                 $('#characloud_characters').css('display', 'block');
-                
+                $('#characloud_board').css('display', 'block');
                 $('#profile_button_is_not_login').css('display', 'block');
                 $('#profile_button_is_login').css('display', 'none');
                 is_login = false;
@@ -3110,7 +3144,7 @@ $(document).ready(function(){
             $('#horde_api').css("display", "none");
             document.getElementById("hordeInfo").classList.add("hidden");
             
-            $('#master_settings_koboldai_block').css("display", "grid");
+            if(!is_mobile_user){$('#master_settings_koboldai_block').css("display", "grid");}
             $('#master_settings_novelai_block').css("display", "none");
             $('#master_settings_openai_block').css("display", "none");
             $('#singleline_toggle').css("display", "grid");
@@ -3124,7 +3158,7 @@ $(document).ready(function(){
             $('#openai_api').css("display","none");
             $('#horde_api').css("display", "none");
             $('#master_settings_koboldai_block').css("display", "none");
-            $('#master_settings_novelai_block').css("display", "grid");
+            if(!is_mobile_user){$('#master_settings_novelai_block').css("display", "grid");}
             $('#master_settings_openai_block').css("display", "none");
             $('#singleline_toggle').css("display", "none");
             $('#multigen_toggle').css("display", "grid");
@@ -3139,7 +3173,7 @@ $(document).ready(function(){
             $('#horde_api').css("display", "none");
             $('#master_settings_koboldai_block').css("display", "none");
             $('#master_settings_novelai_block').css("display", "none");
-            $('#master_settings_openai_block').css("display", "grid");
+            if(!is_mobile_user){$('#master_settings_openai_block').css("display", "grid");}
             $('#singleline_toggle').css("display", "none");
             $('#multigen_toggle').css("display", "grid");
             document.getElementById("hordeInfo").classList.add("hidden");
@@ -3151,7 +3185,7 @@ $(document).ready(function(){
             $('#novel_api').css("display", "none");
             $('#openai_api').css("display","none");
             $('#horde_api').css("display", "block");
-            $('#master_settings_koboldai_block').css("display", "grid");
+            if(!is_mobile_user){$('#master_settings_koboldai_block').css("display", "grid");}
             $('#master_settings_novelai_block').css("display", "none");
             $('#master_settings_openai_block').css("display", "none");
             $('#singleline_toggle').css("display", "grid");
@@ -3301,6 +3335,11 @@ $(document).ready(function(){
         settings.auto_connect = !!$('#autoconnect').prop('checked');
         saveSettings();
     });
+    $('#show_nsfw').change(function() {
+        charaCloud.show_nsfw = !!$('#show_nsfw').prop('checked');
+        charaCloudInit();
+        saveSettings();
+    });
     $('#characloud').change(function() {
         settings.characloud = !!$('#characloud').prop('checked');
         saveSettings();
@@ -3430,6 +3469,11 @@ $(document).ready(function(){
     });
     $( "#horde_model_select" ).change(function() {
         horde_model = $( "#horde_model_select" ).val();
+        if(horde_model && horde_model.length) {
+            document.getElementById("hordeQueue").innerHTML = "Ready.";
+        } else {
+            document.getElementById("hordeQueue").innerHTML = "Model not chosen.";
+        }
     });
     function updateHordeStats() {
         jQuery.ajax({
@@ -3438,12 +3482,31 @@ $(document).ready(function(){
             cache: false,
             contentType: "application/json",
             success: function(data) {
-                if(data.running && data.queue > 0) {
+                if(data.hordeData && data.hordeData.finished) {
+                    hordeCheck = false;
                     document.getElementById("hordeInfo").classList.remove("hidden");
-                    document.getElementById("hordeQueue").innerHTML = String(data.queue);
-                } else {
+                    document.getElementById("hordeQueue").innerHTML = "Finished" + (data.hordeData.kudos ? " (" + data.hordeData.kudos + " kudos)" : "");
+                    generateCallback(data.hordeData);
+                    return;
+                }
+                if(data.hordeData && data.hordeData.wait_time) {
                     document.getElementById("hordeInfo").classList.remove("hidden");
-                    document.getElementById("hordeQueue").innerHTML = "-";
+                    document.getElementById("hordeQueue").innerHTML = "Waiting for generation... (" + data.hordeData.wait_time + ")";
+                } else if(data.running && data.queue > 0) {
+                    document.getElementById("hordeInfo").classList.remove("hidden");
+                    document.getElementById("hordeQueue").innerHTML = "Queue position: " + String(data.queue);
+                } else if(data.hordeError || data.hordeData && data.hordeData.faulted) {
+                    if(data.hordeError) {
+                        console.error(data.hordeError);
+                    }
+                    document.getElementById("hordeInfo").classList.remove("hidden");
+                    document.getElementById("hordeQueue").innerHTML = "Request failed";
+                    hordeCheck = false;
+                    console.log("Horde generation error");
+                    return;
+                } else  {
+                    document.getElementById("hordeInfo").classList.remove("hidden");
+                    document.getElementById("hordeQueue").innerHTML = "Queueing...";
                 }
                 if(hordeCheck){
                     setTimeout(updateHordeStats, 1000);
@@ -3815,6 +3878,9 @@ $(document).ready(function(){
                     free_char_name_mode = !!settings.free_char_name_mode;
                     settings.auto_connect = settings.auto_connect === false ? false : true;
                     settings.characloud = settings.characloud === false ? false : true;
+                    if(settings.show_nsfw !== undefined){
+                        charaCloud.show_nsfw = Boolean(settings.show_nsfw);
+                    }
                     settings.notes = settings.notes === false ? false : true;
 
                     if(!winNotes) {
@@ -3850,6 +3916,8 @@ $(document).ready(function(){
                     $('#multigen').prop('checked', multigen);
                     $('#singleline').prop('checked', singleline);
                     $('#autoconnect').prop('checked', settings.auto_connect);
+                    $('#show_nsfw').prop('checked', charaCloud.show_nsfw);
+                    
                     $('#characloud').prop('checked', settings.characloud);
                     $('#notes_checkbox').prop('checked', settings.notes);
                     $('#swipes').prop('checked', swipes);
@@ -3997,6 +4065,7 @@ $(document).ready(function(){
                     world_budget: settings.world_budget || 100,
                     auto_connect: settings.auto_connect || false,
                     characloud: settings.characloud === false ? false : true,
+                    show_nsfw: charaCloud.show_nsfw,
                     swipes: swipes,
                     notes: settings.notes || false,
                     keep_dialog_examples: keep_dialog_examples,
@@ -5095,6 +5164,9 @@ $(document).ready(function(){
         const this_row_id = $(this).parent().attr('characloud_row_id');
         const this_width = parseInt($(this).parent().children('.characloud_characters_row_scroll').css('width'))-parseInt($('#characloud_characters_row'+this_row_id).css('width'));
         let move_x = 820;
+        if(is_mobile_user){
+            move_x = 305;
+        }
         $(this).parent().lazyLoadXT({edgeX:1000, edgeY:500});
         if(characloud_characters_rows[this_row_id] != 0){
             if($(this).parent().children('.characloud_swipe_rigth').css('display') == 'none'){
@@ -5140,6 +5212,9 @@ $(document).ready(function(){
         const this_width = parseInt($(this).parent().children('.characloud_characters_row_scroll').css('width'))-parseInt($('#characloud_characters_row'+this_row_id).css('width'));
 
         let move_x = 820;
+        if(is_mobile_user){
+            move_x = 305;
+        }
         $(this).parent().lazyLoadXT({edgeX:1000, edgeY:500});
         if(characloud_characters_rows[this_row_id] != this_width*-1 && parseInt($(this).parent().css('width')) < parseInt($(this).parent().children('.characloud_characters_row_scroll').css('width'))){
             if($(this).parent().children('.characloud_swipe_left').css('display') == 'none'){
@@ -5207,6 +5282,7 @@ $(document).ready(function(){
         
         let char_i = 0;
         let row_i = 0;
+        $('#characloud_characters').html('');
         characloud_characters_board.forEach(function (category, i) {
             if (category.characters.length === 0)
                 return;
@@ -5376,6 +5452,7 @@ $(document).ready(function(){
         $('#characloud_search_block').css('display', 'block');
         $('#characloud_search_back_button').css('display', 'block');
         $('#characloud_characters').css('display', 'none');
+        $('#characloud_board').css('display', 'none');
         $('#characloud_search_result').html('');
         characloud_found_characters.sort(function(a, b) {
             var nameA = a.name.toUpperCase(); // ignore upper and lowercase
@@ -5446,7 +5523,37 @@ $(document).ready(function(){
                 easing: "ease-in-out",
                 complete: function() {  }
             });
-        }else{
+
+            if(is_mobile_user){
+                $('#bg_menu').transition({
+                    display: "none",
+                    duration: 140,
+                    delay: 20,
+                    easing: "ease-in-out",
+                    complete: function() {  }
+                });
+            }
+        }else if (is_mobile_user){
+            is_nav_toggle = false;
+            $('#chara_cloud').transition({  
+                width: "100%",
+                duration: 140,
+                delay: 20,
+                easing: "ease-in-out",
+                complete: function() {  }
+            });
+
+            if(is_mobile_user){
+                $('#bg_menu').transition({
+                    display: "block",
+                    duration: 140,
+                    delay: 20,
+                    easing: "ease-in-out",
+                    complete: function() {  }
+                });
+            }
+        }
+        else{
             is_nav_toggle = false;
             $('#chara_cloud').transition({  
                 width: "calc(100vw - 180px)",
@@ -5947,6 +6054,8 @@ $(document).ready(function(){
         $('#characloud_search_back_button').css('display', 'none');
         $('#characloud_search_block').css('display', 'none');
         $('#characloud_characters').css('display', 'block');
+        $('#characloud_board').css('display', 'block');
+
     }
     $('.characloud_user_profile_avatar_img').on('error', function () { // Set default avatar
         
@@ -6319,6 +6428,7 @@ $(document).ready(function(){
         $('#reg_login_popup_shadow').css('display', 'none');
         $('#characloud_user_profile_block').css('display', 'none');
         $('#characloud_characters').css('display', 'none');
+        $('#characloud_board').css('display', 'none');
         $('#characloud_search_back_button').css('display', 'none');
         $('#characloud_search_block').css('display', 'none');
         
